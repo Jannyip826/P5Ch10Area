@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>多邊形的面積｜香港小學五年級數學互動練習</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f0f7ff;
+      user-select: none;
+    }
+    input {
+      user-select: text;
+    }
+    .math-font {
+      font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+    }
+    .canvas-container {
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.95); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .animate-shake {
+      animation: shake 0.35s ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+  <!-- 頂部導航與進度欄 -->
+  <header class="bg-white border-b border-sky-100 shadow-sm sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-md shadow-sky-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 18V8h7l6-5v10l-6 5H4z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight">多邊形的面積</h1>
+          <p class="text-xs text-slate-500 font-medium">香港小學五年級數學｜分割法與填補法練習</p>
+        </div>
+      </div>
+
+      <!-- 進度顯示 -->
+      <div class="flex items-center gap-3 sm:gap-5 flex-1 sm:flex-initial justify-end">
+        <div id="penaltyBadge" class="hidden items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300">
+          <span>⚠️ 答錯加題：</span>
+          <span id="addedCountText">+0 題</span>
+        </div>
+
+        <div class="flex flex-col items-end min-w-[140px] sm:min-w-[190px]">
+          <div class="flex items-baseline gap-2 text-sm font-bold text-slate-700">
+            <span>進度：</span>
+            <span class="text-sky-600 text-base sm:text-lg math-font" id="progressText">第 1 / 10 題</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden mt-1 border border-slate-200">
+            <div id="progressBar" class="h-full bg-gradient-to-r from-sky-400 to-blue-600 rounded-full transition-all duration-500" style="width: 10%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主練習區（左右分欄） -->
+  <main id="practiceArea" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+    
+    <!-- 左邊區域：互動圖形畫布 (7 cols on lg) -->
+    <section class="lg:col-span-7 bg-white rounded-3xl shadow-md shadow-sky-900/5 border border-sky-100 flex flex-col overflow-hidden">
+      <!-- 圖形區標題與工具列 -->
+      <div class="px-5 py-3.5 bg-sky-50/70 border-b border-sky-100 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-sky-600 text-white text-xs font-bold">圖</span>
+          <h2 class="font-bold text-slate-700 text-sm sm:text-base" id="questionTitle">求下圖著色多邊形的面積。</h2>
+        </div>
+        <div class="text-xs font-medium text-slate-500">
+          觀察圖中的直角記號，運用分割法或填補法計算
+        </div>
+      </div>
+
+      <!-- 繪圖輔助工具列 -->
+      <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="toggleDrawBtn" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-sky-600 text-white shadow-sm hover:bg-sky-700 active:scale-95 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            <span>畫直線（分割/填補）</span>
+          </button>
+
+          <button id="undoLineBtn" type="button" class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 active:scale-95 transition disabled:opacity-40" disabled>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            <span>復原</span>
+          </button>
+
+          <button id="clearLinesBtn" type="button" class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 active:scale-95 transition disabled:opacity-40" disabled>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>清除輔助線</span>
+          </button>
+        </div>
+
+        <button id="showHintLineBtn" type="button" class="hidden items-center gap-1 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 text-white shadow-sm hover:bg-amber-600 active:scale-95 transition">
+          <span>💡 顯示參考虛線</span>
+        </button>
+      </div>
+
+      <!-- SVG 互動畫布區 -->
+      <div class="relative flex-1 min-h-[360px] sm:min-h-[440px] canvas-container flex items-center justify-center p-2 touch-none" id="svgWrapper">
+        <svg id="geometrySvg" viewBox="0 0 600 440" class="w-full h-full max-h-[470px] cursor-crosshair">
+          <defs>
+            <!-- 教科書風格雙箭頭 -->
+            <marker id="arrowStart" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 10 1.5 L 1 5 L 10 8.5 z" fill="#334155" />
+            </marker>
+            <marker id="arrowEnd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#334155" />
+            </marker>
+          </defs>
+          <!-- 圖形層 -->
+          <g id="layerBaseShape"></g>
+          <!-- 參考提示線層 -->
+          <g id="layerHintLines"></g>
+          <!-- 標註尺寸層 -->
+          <g id="layerDimensions"></g>
+          <!-- 學生自繪輔助線層 -->
+          <g id="layerUserLines"></g>
+          <!-- 吸附點與預覽線層 -->
+          <g id="layerSnapAndPreview"></g>
+        </svg>
+
+        <!-- 操作小提示浮標 -->
+        <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+          <span class="bg-white/90 backdrop-blur-sm text-slate-600 text-xs px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+            ✏️ 在圖形上拖曳滑鼠或手指畫虛線進行<b>分割</b>或<b>填補</b>（自動吸附頂點）
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右邊區域：列式計算區 (5 cols on lg) -->
+    <section class="lg:col-span-5 bg-white rounded-3xl shadow-md shadow-sky-900/5 border border-sky-100 flex flex-col justify-between overflow-hidden">
+      <div>
+        <!-- 右欄頂部 -->
+        <div class="px-5 py-3.5 bg-indigo-50/70 border-b border-indigo-100 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold">算</span>
+            <h2 class="font-bold text-slate-700 text-sm sm:text-base">列式計算（必須先寫對橫式）</h2>
+          </div>
+          <span id="attemptStatusBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+            首次作答
+          </span>
+        </div>
+
+        <div class="p-5 space-y-5">
+          <!-- 方法選擇器（幫助學生建立解題策略） -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              步驟 1：選擇你的解題方法（可自由切換）
+            </label>
+            <div class="grid grid-cols-2 gap-2.5">
+              <button type="button" id="methodSplitBtn" data-method="split" class="method-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border-2 border-sky-500 bg-sky-50 text-sky-800 font-bold text-sm transition">
+                <span>✂️ 分割法</span>
+                <span class="text-xs font-normal text-sky-600">(相加)</span>
+              </button>
+              <button type="button" id="methodFillBtn" data-method="fill" class="method-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border-2 border-slate-200 bg-white text-slate-600 hover:border-slate-300 font-bold text-sm transition">
+                <span>🧩 填補法</span>
+                <span class="text-xs font-normal text-slate-400">(相減)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 橫式輸入區 -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="expressionInput" class="block text-sm font-bold text-slate-700">
+                步驟 2：輸入計算橫式
+              </label>
+              <span class="text-xs text-slate-400">例：9 × 9 + 12 × 9</span>
+            </div>
+            
+            <div class="relative">
+              <input
+                id="expressionInput"
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="請輸入橫式，例如：(9 + 21) × 9 ÷ 2"
+                class="w-full px-4 py-3 text-lg font-bold math-font rounded-2xl border-2 border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition bg-slate-50 focus:bg-white text-slate-800"
+              />
+            </div>
+
+            <!-- 數學符號快捷鍵 -->
+            <div class="mt-2.5 flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs font-bold text-slate-400 mr-1">快捷符號：</span>
+              <button type="button" data-symbol=" + " class="sym-btn w-9 h-9 rounded-xl bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 font-bold text-lg text-slate-700 border border-slate-200 transition active:scale-90">+</button>
+              <button type="button" data-symbol=" - " class="sym-btn w-9 h-9 rounded-xl bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 font-bold text-lg text-slate-700 border border-slate-200 transition active:scale-90">−</button>
+              <button type="button" data-symbol=" × " class="sym-btn w-9 h-9 rounded-xl bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 font-bold text-lg text-slate-700 border border-slate-200 transition active:scale-90">×</button>
+              <button type="button" data-symbol=" ÷ " class="sym-btn w-9 h-9 rounded-xl bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 font-bold text-lg text-slate-700 border border-slate-200 transition active:scale-90">÷</button>
+              <button type="button" data-symbol="(" class="sym-btn w-9 h-9 rounded-xl bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 font-bold text-lg text-slate-700 border border-slate-200 transition active:scale-90">(</button>
+              <button type="button" data-symbol=")" class="sym-btn w-9 h-9 rounded-xl bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 font-bold text-lg text-slate-700 border border-slate-200 transition active:scale-90">)</button>
+              <button type="button" id="clearExprBtn" class="ml-auto px-2.5 h-9 rounded-xl bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-xs font-bold text-slate-500 border border-slate-200 transition">清空橫式</button>
+            </div>
+          </div>
+
+          <!-- 答案輸入區 -->
+          <div>
+            <label for="answerInput" class="block text-sm font-bold text-slate-700 mb-1.5">
+              步驟 3：計算多邊形的面積
+            </label>
+            <div class="flex items-center gap-3">
+              <span class="text-lg font-extrabold text-slate-600">面積 =</span>
+              <input
+                id="answerInput"
+                type="number"
+                step="any"
+                placeholder="輸入數字"
+                class="flex-1 px-4 py-3 text-xl font-extrabold math-font rounded-2xl border-2 border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition bg-slate-50 focus:bg-white text-slate-800"
+              />
+              <span id="unitDisplay" class="text-lg font-extrabold text-slate-700 bg-slate-100 px-3.5 py-3 rounded-2xl border border-slate-200 math-font">
+                cm²
+              </span>
+            </div>
+          </div>
+
+          <!-- 即時回饋與教學提示框 -->
+          <div id="feedbackBox" class="hidden rounded-2xl p-4 border-2 text-sm leading-relaxed animate-pop">
+            <div class="flex items-start gap-3">
+              <div id="feedbackIcon" class="text-xl mt-0.5">💡</div>
+              <div class="flex-1">
+                <p id="feedbackTitle" class="font-extrabold text-base mb-1"></p>
+                <p id="feedbackMessage" class="font-medium"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部提交與下一題按鈕區 -->
+      <div class="p-5 bg-slate-50 border-t border-slate-200/80 flex flex-col sm:flex-row gap-3">
+        <button
+          id="submitBtn"
+          type="button"
+          class="flex-1 py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base shadow-lg shadow-indigo-200 active:scale-[0.99] transition flex items-center justify-center gap-2"
+        >
+          <span>核對橫式與答案</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+
+        <button
+          id="nextBtn"
+          type="button"
+          class="hidden flex-1 py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-base shadow-lg shadow-emerald-200 active:scale-[0.99] transition items-center justify-center gap-2"
+        >
+          <span id="nextBtnText">進入下一題</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 完成總結畫面（預設隱藏） -->
+  <section id="summaryScreen" class="hidden flex-1 max-w-3xl w-full mx-auto px-4 py-10 items-center justify-center">
+    <div class="bg-white rounded-3xl shadow-xl border border-sky-100 p-6 sm:p-10 w-full text-center animate-pop">
+      <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center text-4xl shadow-lg shadow-amber-200 mb-5">
+        🏆
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2">恭喜你完成所有多邊形面積練習！</h2>
+      <p class="text-slate-500 font-medium mb-8">你已經成功掌握了用「分割法」和「填補法」計算組合圖形的面積！</p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div class="bg-sky-50 rounded-2xl p-4 border border-sky-100">
+          <div class="text-xs font-bold text-sky-600 mb-1">完成總題數</div>
+          <div id="statTotal" class="text-2xl sm:text-3xl font-black text-sky-900 math-font">10</div>
+        </div>
+        <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+          <div class="text-xs font-bold text-emerald-600 mb-1">一次答對</div>
+          <div id="statFirstTry" class="text-2xl sm:text-3xl font-black text-emerald-900 math-font">10</div>
+        </div>
+        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+          <div class="text-xs font-bold text-amber-600 mb-1">改正並加題</div>
+          <div id="statAdded" class="text-2xl sm:text-3xl font-black text-amber-900 math-font">0</div>
+        </div>
+        <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+          <div class="text-xs font-bold text-indigo-600 mb-1">首次準確率</div>
+          <div id="statAccuracy" class="text-2xl sm:text-3xl font-black text-indigo-900 math-font">100%</div>
+        </div>
+      </div>
+
+      <button
+        id="restartBtn"
+        type="button"
+        class="px-8 py-4 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-lg shadow-lg shadow-sky-200 transition active:scale-95"
+      >
+        🔄 重新開始新一輪 10 題練習
+      </button>
+    </div>
+  </section>
+
+  <script>
+    /**
+     * =========================================================================
+     * 1. 安全數學表達式解析與求值器 (支援 +, -, *, ×, /, ÷, 括號, 小數)
+     * =========================================================================
+     */
+    function evaluateMathExpression(rawExpr) {
+      if (!rawExpr || typeof rawExpr !== 'string') {
+        return { valid: false, error: '請先輸入計算橫式！' };
+      }
+
+      // 標準化符號：將全形括號、乘號、除號、減號轉換為標準半形運算符
+      let expr = rawExpr
+        .replace(/\s+/g, '')
+        .replace(/×/g, '*')
+        .replace(/x/gi, '*')
+        .replace(/÷/g, '/')
+        .replace(/：/g, '/')
+        .replace(/＋/g, '+')
+        .replace(/－/g, '-')
+        .replace(/—/g, '-')
+        .replace(/（/g, '(')
+        .replace(/）/g, ')');
+
+      if (expr.length === 0) {
+        return { valid: false, error: '請先輸入計算橫式！' };
+      }
+
+      // 檢查是否只包含合法字元 (數字、小數點、+ - * / ( ) )
+      if (!/^[0-9+\-*/().]+$/.test(expr)) {
+        return { valid: false, error: '橫式包含無效的文字或符號，請只輸入數字與運算符號（+ − × ÷ 括號）。' };
+      }
+
+      // 必須包含至少一個運算符號（防止學生直接把答案填進橫式欄）
+      if (!/[+\-*/]/.test(expr)) {
+        return { valid: false, error: '請寫出完整的計算步驟（橫式），不可只填寫一個數字！' };
+      }
+
+      // 處理隱式乘法，例如 2(3+4) -> 2*(3+4) 或 (2+3)(4+5) -> (2+3)*(4+5)
+      expr = expr.replace(/(\d)\(/g, '$1*(').replace(/\)\(/g, ')*(').replace(/\)(\d)/g, ')*$1');
+
+      // 檢查括號配對
+      let balance = 0;
+      for (const ch of expr) {
+        if (ch === '(') balance++;
+        if (ch === ')') balance--;
+        if (balance < 0) return { valid: false, error: '橫式的括號「)」多了一個，請檢查括號配對。' };
+      }
+      if (balance !== 0) {
+        return { valid: false, error: '橫式的括號「( )」未有閉合，請檢查括號配對。' };
+      }
+
+      // 遞迴下降解析器 (Recursive Descent Parser) 確保 100% 安全求值，絕不使用 eval
+      let pos = 0;
+      function parseExpression() {
+        let value = parseTerm();
+        while (pos < expr.length && (expr[pos] === '+' || expr[pos] === '-')) {
+          const op = expr[pos++];
+          const right = parseTerm();
+          if (op === '+') value += right;
+          else value -= right;
+        }
+        return value;
+      }
+
+      function parseTerm() {
+        let value = parseFactor();
+        while (pos < expr.length && (expr[pos] === '*' || expr[pos] === '/')) {
+          const op = expr[pos++];
+          const right = parseFactor();
+          if (op === '*') value *= right;
+          else {
+            if (Math.abs(right) < 1e-12) throw new Error('除數不能為 0');
+            value /= right;
+          }
+        }
+        return value;
+      }
+
+      function parseFactor() {
+        if (expr[pos] === '+') {
+          pos++;
+          return parseFactor();
+        }
+        if (expr[pos] === '-') {
+          pos++;
+          return -parseFactor();
+        }
+        if (expr[pos] === '(') {
+          pos++;
+          const val = parseExpression();
+          if (expr[pos] !== ')') throw new Error('缺少右括號');
+          pos++;
+          return val;
+        }
+        const start = pos;
+        let dotCount = 0;
+        while (pos < expr.length && ((expr[pos] >= '0' && expr[pos] <= '9') || expr[pos] === '.')) {
+          if (expr[pos] === '.') dotCount++;
+          pos++;
+        }
+        if (start === pos || dotCount > 1) {
+          throw new Error('數字格式不正確');
+        }
+        return parseFloat(expr.slice(start, pos));
+      }
+
+      try {
+        const result = parseExpression();
+        if (pos !== expr.length || Number.isNaN(result) || !Number.isFinite(result)) {
+          return { valid: false, error: '橫式算式不完整，請檢查運算符號前後是否有數字。' };
+        }
+        // 提取橫式中出現的所有數字，供基本合理性檢驗（避免學生亂湊無關數字如 100+89）
+        const numbersUsed = (expr.match(/\d+(\.\d+)?/g) || []).map(Number);
+        return { valid: true, value: Math.round(result * 10000) / 10000, numbersUsed };
+      } catch (e) {
+        return { valid: false, error: '橫式格式有誤（' + e.message + '），請檢查算式。' };
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 2. SVG 教科書級幾何標註繪圖輔助工具
+     * =========================================================================
+     */
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    function createSvgEl(tag, attrs = {}) {
+      const el = document.createElementNS(SVG_NS, tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        el.setAttribute(k, v);
+      }
+      return el;
+    }
+
+    // 繪製教科書風格直角記號 ∟
+    function drawRightAngle(container, vx, vy, ux1, uy1, ux2, uy2, size = 11) {
+      const len1 = Math.hypot(ux1, uy1) || 1;
+      const len2 = Math.hypot(ux2, uy2) || 1;
+      const dx1 = (ux1 / len1) * size;
+      const dy1 = (uy1 / len1) * size;
+      const dx2 = (ux2 / len2) * size;
+      const dy2 = (uy2 / len2) * size;
+
+      const p1x = vx + dx1;
+      const p1y = vy + dy1;
+      const p2x = vx + dx1 + dx2;
+      const p2y = vy + dy1 + dy2;
+      const p3x = vx + dx2;
+      const p3y = vy + dy2;
+
+      container.appendChild(createSvgEl('polyline', {
+        points: `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`,
+        fill: 'none',
+        stroke: '#1e293b',
+        'stroke-width': '1.6',
+        'stroke-linejoin': 'miter'
+      }));
+    }
+
+    // 樣式 A：純文字貼邊標註（完全還原範例圖左側「9 cm」、上方「9 cm」風格）
+    // 適用於完整的單一多邊形實邊，不畫多餘雙箭頭或外框
+    function drawTextDim(container, p1, p2, label, offsetDist = 13, options = {}) {
+      const [x1, y1] = p1;
+      const [x2, y2] = p2;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.hypot(dx, dy);
+      if (len < 1) return;
+
+      const { outwardHint = null } = options;
+
+      // 順時針頂點順序下，(-dy/len, dx/len) 指向多邊形外側
+      let nx = -dy / len;
+      let ny = dx / len;
+      if (outwardHint) {
+        const dot = nx * outwardHint[0] + ny * outwardHint[1];
+        if (dot < 0) {
+          nx = -nx;
+          ny = -ny;
+        }
+      }
+
+      // 依據法向量方向微調水平/垂直文字對齊，避免文字邊緣觸碰到圖形線段
+      const isHorizontalSide = Math.abs(nx) > 0.65;
+      const extraShift = isHorizontalSide ? Math.min(26, label.length * 4 + 4) : 11;
+      const mx = (x1 + x2) / 2 + nx * (offsetDist + extraShift - 11);
+      const my = (y1 + y2) / 2 + ny * offsetDist;
+
+      // 白色描邊襯底確保在淺藍網格背景上極致清晰
+      const textBg = createSvgEl('text', {
+        x: mx,
+        y: my,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        stroke: '#ffffff',
+        'stroke-width': '4',
+        'stroke-linejoin': 'round',
+        fill: '#ffffff',
+        'font-size': '15',
+        'font-weight': '800',
+        class: 'math-font'
+      });
+      textBg.textContent = label;
+      container.appendChild(textBg);
+
+      const textFg = createSvgEl('text', {
+        x: mx,
+        y: my,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        fill: '#0f172a',
+        'font-size': '15',
+        'font-weight': '800',
+        class: 'math-font'
+      });
+      textFg.textContent = label;
+      container.appendChild(textFg);
+    }
+
+    // 樣式 B：延伸界線＋雙箭頭標註（完全還原範例圖底部「9 cm | 12 cm」與右側兩段「9 cm」風格）
+    // 適用於同一條直線上分成多段的邊、虛線延伸高或總寬/總高
+    function drawArrowDim(container, p1, p2, label, offsetDist = 15, options = {}) {
+      const [x1, y1] = p1;
+      const [x2, y2] = p2;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.hypot(dx, dy);
+      if (len < 1) return;
+
+      const {
+        extStart = 2,
+        extOverhang = 5,
+        outwardHint = null
+      } = options;
+
+      let nx = -dy / len;
+      let ny = dx / len;
+      if (outwardHint) {
+        const dot = nx * outwardHint[0] + ny * outwardHint[1];
+        if (dot < 0) {
+          nx = -nx;
+          ny = -ny;
+        }
+      }
+
+      const ax1 = x1 + nx * offsetDist;
+      const ay1 = y1 + ny * offsetDist;
+      const ax2 = x2 + nx * offsetDist;
+      const ay2 = y2 + ny * offsetDist;
+
+      // 垂直於邊的細實線延伸界線（教科書標準樣式）
+      const extEnd = offsetDist + extOverhang;
+      container.appendChild(createSvgEl('line', {
+        x1: x1 + nx * extStart,
+        y1: y1 + ny * extStart,
+        x2: x1 + nx * extEnd,
+        y2: y1 + ny * extEnd,
+        stroke: '#334155',
+        'stroke-width': '1.25'
+      }));
+      container.appendChild(createSvgEl('line', {
+        x1: x2 + nx * extStart,
+        y1: y2 + ny * extStart,
+        x2: x2 + nx * extEnd,
+        y2: y2 + ny * extEnd,
+        stroke: '#334155',
+        'stroke-width': '1.25'
+      }));
+
+      // 雙向實心三角箭頭尺寸線
+      container.appendChild(createSvgEl('line', {
+        x1: ax1,
+        y1: ay1,
+        x2: ax2,
+        y2: ay2,
+        stroke: '#334155',
+        'stroke-width': '1.45',
+        'marker-start': 'url(#arrowStart)',
+        'marker-end': 'url(#arrowEnd)'
+      }));
+
+      // 外側純文字數值（不畫外框膠囊，與範例圖完全一致）
+      const isHorizontalShift = Math.abs(nx) > 0.65;
+      const textDist = isHorizontalShift ? Math.min(26, label.length * 4 + 6) : 14;
+      const mx = (ax1 + ax2) / 2 + nx * textDist;
+      const my = (ay1 + ay2) / 2 + ny * textDist;
+
+      const textBg = createSvgEl('text', {
+        x: mx,
+        y: my,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        stroke: '#ffffff',
+        'stroke-width': '4',
+        'stroke-linejoin': 'round',
+        fill: '#ffffff',
+        'font-size': '15',
+        'font-weight': '800',
+        class: 'math-font'
+      });
+      textBg.textContent = label;
+      container.appendChild(textBg);
+
+      const textFg = createSvgEl('text', {
+        x: mx,
+        y: my,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        fill: '#0f172a',
+        'font-size': '15',
+        'font-weight': '800',
+        class: 'math-font'
+      });
+      textFg.textContent = label;
+      container.appendChild(textFg);
+    }
+
+    /**
+     * =========================================================================
+     * 3. 12 種符合香港小五課程的「雙圖形組合」題型模板庫
+     * 嚴格遵守：
+     * 1) 只由 2 個基本圖形組成，且正方形與長方形絕不同時出現。
+     * 2) 完整實邊一律使用樣式 A（drawTextDim 純文字貼邊標註）；
+     *    分段邊、虛線延伸高或總寬一律使用樣式 B（drawArrowDim 延伸界線＋雙箭頭）。
+     * 3) 對邊相等的長度只標註其中一邊，絕不重疊、絕不遮擋圖形。
+     * =========================================================================
+     */
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    const QUESTION_TEMPLATES = [
+      // 題型 1：正方形 + 平行四邊形（100% 還原附圖範例：左邊 9 cm 純文字、頂邊 9 cm 純文字、底邊分段 9 cm 與 12 cm 雙箭頭、右側兩段 9 cm 雙箭頭）
+      {
+        id: 'sq_para_classic',
+        generate(isExactSample = false) {
+          const a = isExactSample ? 9 : pickRandom([6, 8, 9, 10, 12]);
+          const b = isExactSample ? 12 : pickRandom([8, 10, 12, 14, 15]);
+          const unit = 'cm';
+          const area = a * a + b * a;
+
+          const scale = Math.min(250 / (a + b), 145 / a);
+          const w1 = a * scale;
+          const w2 = b * scale;
+          const h = a * scale;
+          const ox = (600 - (w1 + w2)) / 2 - 8;
+          const oy = (440 + h) / 2 + 28;
+
+          const p0 = [ox, oy];                   // 左下
+          const p1 = [ox, oy - h];               // 左上
+          const p2 = [ox + w1, oy - h];          // 中上
+          const p3 = [ox + w1 + w2, oy - 2 * h]; // 右上
+          const p4 = [ox + w1 + w2, oy - h];     // 右中
+          const p5 = [ox + w1, oy];              // 中下
+          const pExt = [ox + w1 + w2, oy];       // 右下虛線直角點
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${a} × ${a} + ${b} × ${a}`,
+            hintText: `觀察圖中的直角記號，試在中間轉折處畫一條垂直線，把圖形分割成左右兩個基本圖形，再留意右邊平行四邊形的底和高。`,
+            polygon: [p0, p1, p2, p3, p4, p5],
+            snapPoints: [p0, p1, p2, p3, p4, p5, pExt],
+            hintLines: [[p2, p5]],
+            renderExtras(baseG, dimG) {
+              // 右下補足直角三角形虛線
+              baseG.appendChild(createSvgEl('polyline', {
+                points: `${p5[0]},${p5[1]} ${pExt[0]},${pExt[1]} ${p4[0]},${p4[1]}`,
+                fill: 'none',
+                stroke: '#334155',
+                'stroke-width': '1.6',
+                'stroke-dasharray': '5,4'
+              }));
+              drawRightAngle(baseG, p1[0], p1[1], 1, 0, 0, 1);
+              drawRightAngle(baseG, p0[0], p0[1], 1, 0, 0, -1);
+              drawRightAngle(baseG, pExt[0], pExt[1], -1, 0, 0, -1);
+
+              // 樣式 A：完整實邊用純文字貼邊標註
+              drawTextDim(dimG, p0, p1, `${a} ${unit}`, 13);
+              drawTextDim(dimG, p1, p2, `${a} ${unit}`, 13);
+
+              // 樣式 B：分段底邊與右側兩段高度用延伸界線＋雙箭頭標註
+              drawArrowDim(dimG, p5, p0, `${a} ${unit}`, 15);
+              drawArrowDim(dimG, pExt, p5, `${b} ${unit}`, 15);
+              drawArrowDim(dimG, p3, p4, `${a} ${unit}`, 15);
+              drawArrowDim(dimG, p4, pExt, `${a} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 2：長方形 + 三角形（房子五邊形：底邊與左邊完整實邊用樣式 A 純文字，上方三角形虛線高用樣式 B 雙箭頭；右側對邊相等不重複）
+      {
+        id: 'rect_tri_house',
+        generate() {
+          const w = pickRandom([10, 12, 14, 16]);
+          const h1 = pickRandom([6, 7, 8, 9]);
+          const h2 = pickRandom([4, 5, 6, 8]);
+          const unit = 'cm';
+          const area = w * h1 + (w * h2) / 2;
+
+          const scale = Math.min(260 / w, 215 / (h1 + h2));
+          const sw = w * scale;
+          const sh1 = h1 * scale;
+          const sh2 = h2 * scale;
+          const ox = (600 - sw) / 2 - 12;
+          const oy = (440 + sh1 + sh2) / 2 - 4;
+
+          const p0 = [ox, oy];
+          const p1 = [ox, oy - sh1];
+          const p2 = [ox + sw * 0.55, oy - sh1 - sh2];
+          const p3 = [ox + sw, oy - sh1];
+          const p4 = [ox + sw, oy];
+          const pFoot = [ox + sw * 0.55, oy - sh1];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${w} × ${h1} + ${w} × ${h2} ÷ 2`,
+            hintText: `留意下方左右兩隻直角，對邊長度相等。試在上方兩個轉角之間畫一條水平線，把圖形分割成上下兩個基本圖形來計算。`,
+            polygon: [p0, p1, p2, p3, p4],
+            snapPoints: [p0, p1, p2, p3, p4, pFoot],
+            hintLines: [[p1, p3]],
+            renderExtras(baseG, dimG) {
+              // 頂點水平虛線引導至右側外緣標註三角形高度
+              baseG.appendChild(createSvgEl('line', {
+                x1: p2[0], y1: p2[1], x2: p3[0] + 4, y2: p2[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+              drawRightAngle(baseG, p0[0], p0[1], 1, 0, 0, -1);
+              drawRightAngle(baseG, p4[0], p4[1], -1, 0, 0, -1);
+
+              // 樣式 A：完整實邊純文字
+              drawTextDim(dimG, p4, p0, `${w} ${unit}`, 14);
+              drawTextDim(dimG, p0, p1, `${h1} ${unit}`, 13);
+
+              // 樣式 B：虛線延伸高用雙箭頭
+              drawArrowDim(dimG, [p3[0], p2[1]], p3, `${h2} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 3：缺角長方形（填補法：底邊與左邊完整實邊用樣式 A 純文字，右上缺角兩條虛線邊用樣式 B 雙箭頭）
+      {
+        id: 'rect_minus_tri',
+        generate() {
+          const w = pickRandom([14, 16, 18, 20]);
+          const h = pickRandom([10, 12, 14]);
+          const cutW = pickRandom([6, 8, 10]);
+          const cutH = pickRandom([4, 5, 6]);
+          const unit = 'cm';
+          const area = w * h - (cutW * cutH) / 2;
+
+          const scale = Math.min(280 / w, 200 / h);
+          const sw = w * scale;
+          const sh = h * scale;
+          const scw = cutW * scale;
+          const sch = cutH * scale;
+          const ox = (600 - sw) / 2 - 8;
+          const oy = (440 + sh) / 2 + 8;
+
+          const p0 = [ox, oy];
+          const p1 = [ox, oy - sh];
+          const p2 = [ox + sw - scw, oy - sh];
+          const p3 = [ox + sw, oy - sh + sch];
+          const p4 = [ox + sw, oy];
+          const pCorner = [ox + sw, oy - sh];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${w} × ${h} - ${cutW} × ${cutH} ÷ 2`,
+            hintText: `建議使用「填補法」：沿右上角的虛線把缺角補回一個完整的直角大圖形，先求大圖形面積，再減去右上角空白部分的面積。`,
+            polygon: [p0, p1, p2, p3, p4],
+            snapPoints: [p0, p1, p2, p3, p4, pCorner],
+            hintLines: [[p2, pCorner], [pCorner, p3]],
+            renderExtras(baseG, dimG) {
+              baseG.appendChild(createSvgEl('polyline', {
+                points: `${p2[0]},${p2[1]} ${pCorner[0]},${pCorner[1]} ${p3[0]},${p3[1]}`,
+                fill: 'none', stroke: '#475569', 'stroke-width': '1.5', 'stroke-dasharray': '5,4'
+              }));
+              drawRightAngle(baseG, p0[0], p0[1], 1, 0, 0, -1);
+              drawRightAngle(baseG, p1[0], p1[1], 1, 0, 0, 1);
+              drawRightAngle(baseG, p4[0], p4[1], -1, 0, 0, -1);
+              drawRightAngle(baseG, pCorner[0], pCorner[1], -1, 0, 0, 1, 10);
+
+              // 樣式 A：完整實邊純文字
+              drawTextDim(dimG, p4, p0, `${w} ${unit}`, 14);
+              drawTextDim(dimG, p0, p1, `${h} ${unit}`, 13);
+
+              // 樣式 B：虛線缺角兩邊用雙箭頭
+              drawArrowDim(dimG, p2, pCorner, `${cutW} ${unit}`, 14);
+              drawArrowDim(dimG, pCorner, p3, `${cutH} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 4：正方形 + 梯形（左邊完整實邊用樣式 A 純文字；頂邊右側段及底邊兩段分段邊用樣式 B 雙箭頭）
+      {
+        id: 'sq_trap_right',
+        generate() {
+          const s = pickRandom([8, 10, 12]);
+          const topB = pickRandom([4, 6, 8]);
+          const botB = topB + pickRandom([4, 6]);
+          const unit = 'cm';
+          const area = s * s + ((topB + botB) * s) / 2;
+
+          const scale = Math.min(290 / (s + botB), 200 / s);
+          const ss = s * scale;
+          const st = topB * scale;
+          const sb = botB * scale;
+          const ox = (600 - (ss + sb)) / 2;
+          const oy = (440 + ss) / 2;
+
+          const p0 = [ox, oy];
+          const p1 = [ox, oy - ss];
+          const p2 = [ox + ss, oy - ss];
+          const p3 = [ox + ss + st, oy - ss];
+          const p4 = [ox + ss + sb, oy];
+          const p5 = [ox + ss, oy];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${s} × ${s} + (${topB} + ${botB}) × ${s} ÷ 2`,
+            hintText: `留意左邊的兩個直角記號，以及下方標示的分割點。你可以從分割點向上畫一條垂直線，把圖形分成左右兩個基本圖形（或直接當作一個大圖形計算）。`,
+            polygon: [p0, p1, p3, p4],
+            snapPoints: [p0, p1, p2, p3, p4, p5],
+            hintLines: [[p2, p5]],
+            renderExtras(baseG, dimG) {
+              drawRightAngle(baseG, p0[0], p0[1], 1, 0, 0, -1);
+              drawRightAngle(baseG, p1[0], p1[1], 1, 0, 0, 1);
+
+              // 樣式 A：左邊完整垂直實邊用純文字
+              drawTextDim(dimG, p0, p1, `${s} ${unit}`, 13);
+
+              // 樣式 B：頂邊右側分段及底邊兩段分段邊用延伸界線＋雙箭頭
+              drawArrowDim(dimG, p2, p3, `${topB} ${unit}`, 14);
+              drawArrowDim(dimG, p5, p0, `${s} ${unit}`, 15);
+              drawArrowDim(dimG, p4, p5, `${botB} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 5：長方形 + 梯形（頂邊、底邊與左邊完整實邊用樣式 A 純文字，上方虛線高用樣式 B 雙箭頭；右側對邊不重複）
+      {
+        id: 'rect_trap_top',
+        generate() {
+          const w = pickRandom([14, 16, 18, 20]);
+          const h1 = pickRandom([5, 6, 8]);
+          const topB = pickRandom([6, 8, 10]);
+          const h2 = pickRandom([4, 6, 8]);
+          const unit = 'm';
+          const area = w * h1 + ((topB + w) * h2) / 2;
+
+          const scale = Math.min(280 / w, 215 / (h1 + h2));
+          const sw = w * scale;
+          const sh1 = h1 * scale;
+          const st = topB * scale;
+          const sh2 = h2 * scale;
+          const ox = (600 - sw) / 2 - 12;
+          const oy = (440 + sh1 + sh2) / 2 - 4;
+
+          const p0 = [ox, oy];
+          const p1 = [ox, oy - sh1];
+          const p2 = [ox + (sw - st) / 2, oy - sh1 - sh2];
+          const p3 = [ox + (sw + st) / 2, oy - sh1 - sh2];
+          const p4 = [ox + sw, oy - sh1];
+          const p5 = [ox + sw, oy];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${w} × ${h1} + (${topB} + ${w}) × ${h2} ÷ 2`,
+            hintText: `連接左右兩側腰部的轉折點，可以把圖形分成上下兩個基本圖形。留意下方兩個直角記號，對邊的長度是相等的。`,
+            polygon: [p0, p1, p2, p3, p4, p5],
+            snapPoints: [p0, p1, p2, p3, p4, p5],
+            hintLines: [[p1, p4]],
+            renderExtras(baseG, dimG) {
+              baseG.appendChild(createSvgEl('line', {
+                x1: p3[0], y1: p3[1], x2: p4[0] + 4, y2: p3[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+              drawRightAngle(baseG, p0[0], p0[1], 1, 0, 0, -1);
+              drawRightAngle(baseG, p5[0], p5[1], -1, 0, 0, -1);
+
+              // 樣式 A：完整實邊純文字
+              drawTextDim(dimG, p2, p3, `${topB} ${unit}`, 13);
+              drawTextDim(dimG, p5, p0, `${w} ${unit}`, 14);
+              drawTextDim(dimG, p0, p1, `${h1} ${unit}`, 13);
+
+              // 樣式 B：虛線延伸高用雙箭頭
+              drawArrowDim(dimG, [p4[0], p3[1]], p4, `${h2} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 6：平行四邊形 + 三角形（頂邊完整實邊用樣式 A 純文字；底邊右側分段及左側虛線高用樣式 B 雙箭頭）
+      {
+        id: 'para_tri_side',
+        generate() {
+          const baseP = pickRandom([10, 12, 14]);
+          const h = pickRandom([6, 8, 10]);
+          const slant = pickRandom([3, 4, 5]);
+          const baseT = pickRandom([6, 8, 10]);
+          const unit = 'cm';
+          const area = baseP * h + (baseT * h) / 2;
+
+          const totalW = slant + baseP + baseT;
+          const scale = Math.min(300 / totalW, 190 / h);
+          const sp = baseP * scale;
+          const sh = h * scale;
+          const ss = slant * scale;
+          const st = baseT * scale;
+
+          const ox = (600 - totalW * scale) / 2 + 12;
+          const oy = (440 + sh) / 2;
+
+          const p0 = [ox, oy];
+          const p1 = [ox + ss, oy - sh];
+          const p2 = [ox + ss + sp, oy - sh];
+          const p3 = [ox + sp + st, oy];
+          const p4 = [ox + sp, oy];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${baseP} × ${h} + ${baseT} × ${h} ÷ 2`,
+            hintText: `從右上角向下連接至底邊的分割點，可把圖形分成左右兩個基本圖形；留意平行四邊形的對邊長度是相等的。`,
+            polygon: [p0, p1, p2, p3, p4],
+            snapPoints: [p0, p1, p2, p3, p4],
+            hintLines: [[p2, p4]],
+            renderExtras(baseG, dimG) {
+              baseG.appendChild(createSvgEl('line', {
+                x1: p1[0], y1: p1[1], x2: p0[0] - 4, y2: p1[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+
+              // 樣式 A：頂邊完整實邊純文字
+              drawTextDim(dimG, p1, p2, `${baseP} ${unit}`, 13);
+
+              // 樣式 B：底邊右側分段與左側虛線延伸高用雙箭頭
+              drawArrowDim(dimG, p3, p4, `${baseT} ${unit}`, 15);
+              drawArrowDim(dimG, p0, [p0[0], p1[1]], `${h} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 7：正方形 + 三角形（底邊完整實邊用樣式 A 純文字；左邊分成上下兩段用樣式 B 雙箭頭；右側不重複標 s）
+      {
+        id: 'sq_tri_wing',
+        generate() {
+          const s = pickRandom([8, 10, 12]);
+          const hTri = pickRandom([6, 8, 9, 12]);
+          const unit = 'cm';
+          const area = s * s + (s * hTri) / 2;
+
+          const scale = Math.min(220 / s, 225 / (s + hTri));
+          const ss = s * scale;
+          const sh = hTri * scale;
+          const ox = (600 - ss) / 2 + 10;
+          const oy = (440 + ss + sh) / 2 - 4;
+
+          const p0 = [ox, oy];
+          const p1 = [ox, oy - ss - sh];
+          const p2 = [ox + ss, oy - ss];
+          const p3 = [ox + ss, oy];
+          const pMid = [ox, oy - ss];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${s} × ${s} + ${s} × ${hTri} ÷ 2`,
+            hintText: `從左邊垂直邊的轉折點向右連接至右上角，可以把圖形分成上下兩個基本圖形；留意下方兩個直角記號，對邊長度相等。`,
+            polygon: [p0, p1, p2, p3],
+            snapPoints: [p0, p1, p2, p3, pMid],
+            hintLines: [[pMid, p2]],
+            renderExtras(baseG, dimG) {
+              drawRightAngle(baseG, p0[0], p0[1], 1, 0, 0, -1);
+              drawRightAngle(baseG, p3[0], p3[1], -1, 0, 0, -1);
+
+              // 樣式 A：底邊完整實邊純文字
+              drawTextDim(dimG, p3, p0, `${s} ${unit}`, 14);
+
+              // 樣式 B：左邊上下兩段用延伸界線＋雙箭頭
+              drawArrowDim(dimG, p0, pMid, `${s} ${unit}`, 15);
+              drawArrowDim(dimG, pMid, p1, `${hTri} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 8：兩個三角形（飛鏢形：底邊虛線總寬、左側虛線外高與右側虛線內高全採用樣式 B 延伸界線＋雙箭頭）
+      {
+        id: 'two_triangles_dart',
+        generate() {
+          const base = pickRandom([12, 14, 16, 18]);
+          const hOuter = pickRandom([10, 12, 14]);
+          const hInner = pickRandom([4, 6]);
+          const unit = 'cm';
+          const area = (base * hOuter) / 2 - (base * hInner) / 2;
+
+          const scale = Math.min(270 / base, 205 / hOuter);
+          const sb = base * scale;
+          const sho = hOuter * scale;
+          const shi = hInner * scale;
+          const ox = (600 - sb) / 2;
+          const oy = (440 + sho) / 2;
+
+          const p0 = [ox, oy];
+          const p1 = [ox + sb / 2, oy - sho];
+          const p2 = [ox + sb, oy];
+          const p3 = [ox + sb / 2, oy - shi];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${base} × ${hOuter} ÷ 2 - ${base} × ${hInner} ÷ 2`,
+            hintText: `可用「填補法」：沿底邊虛線補成一個大圖形，先計算整個大圖形的面積，再減去下方空白小圖形的面積。`,
+            polygon: [p0, p1, p2, p3],
+            snapPoints: [p0, p1, p2, p3],
+            hintLines: [[p0, p2], [p1, p3]],
+            renderExtras(baseG, dimG) {
+              baseG.appendChild(createSvgEl('line', {
+                x1: p0[0], y1: p0[1], x2: p2[0], y2: p2[1],
+                stroke: '#475569', 'stroke-width': '1.5', 'stroke-dasharray': '5,4'
+              }));
+
+              baseG.appendChild(createSvgEl('line', {
+                x1: p1[0], y1: p1[1], x2: p0[0] - 4, y2: p1[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+              baseG.appendChild(createSvgEl('line', {
+                x1: p3[0], y1: p3[1], x2: p2[0] + 4, y2: p3[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+
+              // 樣式 B：虛線底邊及左右兩側虛線延伸高均用延伸界線＋雙箭頭
+              drawArrowDim(dimG, p2, p0, `${base} ${unit}`, 15);
+              drawArrowDim(dimG, p0, [p0[0], p1[1]], `${hOuter} ${unit}`, 15);
+              drawArrowDim(dimG, [p2[0], p3[1]], p2, `${hInner} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 9：兩個梯形（對稱六邊形：頂邊與底邊完整實邊用樣式 A 純文字，左側兩段高度與下方總橫寬用樣式 B 延伸界線＋雙箭頭）
+      {
+        id: 'two_trapeziums',
+        generate() {
+          const topB = pickRandom([6, 8, 10]);
+          const midB = topB + pickRandom([6, 8]);
+          const botB = pickRandom([8, 10, 12]);
+          const h1 = pickRandom([4, 5, 6]);
+          const h2 = pickRandom([4, 5, 6]);
+          const unit = 'cm';
+          const area = ((topB + midB) * h1) / 2 + ((midB + botB) * h2) / 2;
+
+          const scale = Math.min(250 / midB, 195 / (h1 + h2));
+          const st = topB * scale;
+          const sm = midB * scale;
+          const sb = botB * scale;
+          const sh1 = h1 * scale;
+          const sh2 = h2 * scale;
+          const cx = 305;
+          const cy = 205;
+
+          const p0 = [cx - st / 2, cy - sh1];
+          const p1 = [cx + st / 2, cy - sh1];
+          const p2 = [cx + sm / 2, cy];
+          const p3 = [cx + sb / 2, cy + sh2];
+          const p4 = [cx - sb / 2, cy + sh2];
+          const p5 = [cx - sm / 2, cy];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `(${topB} + ${midB}) × ${h1} ÷ 2 + (${midB} + ${botB}) × ${h2} ÷ 2`,
+            hintText: `連接左右兩側最寬的頂點畫一條水平線，可以把圖形分割成上下兩個基本圖形來計算。`,
+            polygon: [p0, p1, p2, p3, p4, p5],
+            snapPoints: [p0, p1, p2, p3, p4, p5],
+            hintLines: [[p5, p2]],
+            renderExtras(baseG, dimG) {
+              // 左側水平虛線引導上下兩段高度
+              baseG.appendChild(createSvgEl('line', {
+                x1: p0[0], y1: p0[1], x2: p5[0] - 4, y2: p0[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+              baseG.appendChild(createSvgEl('line', {
+                x1: p4[0], y1: p4[1], x2: p5[0] - 4, y2: p4[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+
+              // 樣式 A：頂邊與底邊完整實邊純文字
+              drawTextDim(dimG, p0, p1, `${topB} ${unit}`, 13);
+              drawTextDim(dimG, p3, p4, `${botB} ${unit}`, 14);
+
+              // 樣式 B：左側兩段高度用延伸界線＋雙箭頭
+              drawArrowDim(dimG, p5, [p5[0], p0[1]], `${h1} ${unit}`, 15);
+              drawArrowDim(dimG, [p5[0], p4[1]], p5, `${h2} ${unit}`, 15);
+
+              // 樣式 B：最寬橫距於底邊下方用標準延伸界線＋雙箭頭標註（不壓藍色區域，亦無多餘文字前綴）
+              const totalSpanY = p4[1] + 40;
+              drawArrowDim(dimG, [p2[0], totalSpanY], [p5[0], totalSpanY], `${midB} ${unit}`, 2, {
+                extStart: -(totalSpanY - p2[1] - 3),
+                extOverhang: 5
+              });
+            }
+          };
+        }
+      },
+
+      // 題型 10：兩個平行四邊形（頂邊分成兩段與左側虛線高用樣式 B 延伸界線＋雙箭頭，底邊對邊相等不重複標）
+      {
+        id: 'two_parallelograms',
+        generate() {
+          const base = pickRandom([8, 10, 12]);
+          const h = pickRandom([6, 8, 10]);
+          const slant = pickRandom([4, 5, 6]);
+          const unit = 'cm';
+          const area = base * h * 2;
+
+          const totalW = base * 2 + slant;
+          const scale = Math.min(300 / totalW, 190 / h);
+          const sb = base * scale;
+          const sh = h * scale;
+          const ss = slant * scale;
+          const ox = (600 - totalW * scale) / 2 + 12;
+          const oy = (440 + sh) / 2;
+
+          const p0 = [ox, oy];
+          const p1 = [ox + ss, oy - sh];
+          const p2 = [ox + ss + sb, oy - sh];
+          const p3 = [ox + ss + sb * 2, oy - sh];
+          const p4 = [ox + sb * 2, oy];
+          const p5 = [ox + sb, oy];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${base} × ${h} + ${base} × ${h}`,
+            hintText: `從頂邊中間的分割點向下連接到底邊中間的分割點，可以把圖形分成左右兩個完全相同的圖形。`,
+            polygon: [p0, p1, p3, p4],
+            snapPoints: [p0, p1, p2, p3, p4, p5],
+            hintLines: [[p2, p5]],
+            renderExtras(baseG, dimG) {
+              baseG.appendChild(createSvgEl('line', {
+                x1: p1[0], y1: p1[1], x2: p0[0] - 4, y2: p1[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+
+              // 樣式 B：頂邊兩段分段邊與左側虛線高均用延伸界線＋雙箭頭
+              drawArrowDim(dimG, p1, p2, `${base} ${unit}`, 14);
+              drawArrowDim(dimG, p2, p3, `${base} ${unit}`, 14);
+              drawArrowDim(dimG, p0, [p0[0], p1[1]], `${h} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 11：梯形 + 三角形（左邊與頂邊完整實邊用樣式 A 純文字，底邊兩段分段邊用樣式 B 延伸界線＋雙箭頭）
+      {
+        id: 'trap_tri_right',
+        generate() {
+          const topB = pickRandom([6, 8, 10]);
+          const botB = topB + pickRandom([4, 6]);
+          const h = pickRandom([6, 8, 10]);
+          const triBase = pickRandom([6, 8, 10]);
+          const unit = 'cm';
+          const area = ((topB + botB) * h) / 2 + (triBase * h) / 2;
+
+          const totalW = botB + triBase;
+          const scale = Math.min(300 / totalW, 190 / h);
+          const st = topB * scale;
+          const sb = botB * scale;
+          const sh = h * scale;
+          const str = triBase * scale;
+          const ox = (600 - totalW * scale) / 2 + 8;
+          const oy = (440 + sh) / 2;
+
+          const p0 = [ox, oy];
+          const p1 = [ox, oy - sh];
+          const p2 = [ox + st, oy - sh];
+          const p3 = [ox + sb + str, oy];
+          const p4 = [ox + sb, oy];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `(${topB} + ${botB}) × ${h} ÷ 2 + ${triBase} × ${h} ÷ 2`,
+            hintText: `從上方右側轉角向下連接到底邊的分割點，可以把圖形分成左右兩個基本圖形，且兩者的高都等於左邊的垂直邊長。`,
+            polygon: [p0, p1, p2, p3],
+            snapPoints: [p0, p1, p2, p3, p4],
+            hintLines: [[p2, p4]],
+            renderExtras(baseG, dimG) {
+              drawRightAngle(baseG, p0[0], p0[1], 1, 0, 0, -1);
+              drawRightAngle(baseG, p1[0], p1[1], 1, 0, 0, 1);
+
+              // 樣式 A：完整實邊純文字
+              drawTextDim(dimG, p0, p1, `${h} ${unit}`, 13);
+              drawTextDim(dimG, p1, p2, `${topB} ${unit}`, 13);
+
+              // 樣式 B：底邊兩段分段邊用延伸界線＋雙箭頭
+              drawArrowDim(dimG, p4, p0, `${botB} ${unit}`, 15);
+              drawArrowDim(dimG, p3, p4, `${triBase} ${unit}`, 15);
+            }
+          };
+        }
+      },
+
+      // 題型 12：平行四邊形 + 梯形（頂邊與底邊完整實邊用樣式 A 純文字，左側上下兩段虛線高用樣式 B 延伸界線＋雙箭頭）
+      {
+        id: 'para_trap_stack',
+        generate() {
+          const base = pickRandom([10, 12, 14]);
+          const h1 = pickRandom([5, 6, 8]);
+          const botB = base + pickRandom([4, 6, 8]);
+          const h2 = pickRandom([4, 6]);
+          const slant = pickRandom([3, 4]);
+          const unit = 'm';
+          const area = base * h1 + ((base + botB) * h2) / 2;
+
+          const scale = Math.min(270 / (botB + slant), 210 / (h1 + h2));
+          const sb = base * scale;
+          const sh1 = h1 * scale;
+          const sbot = botB * scale;
+          const sh2 = h2 * scale;
+          const ssl = slant * scale;
+          const ox = (600 - sbot) / 2 + 12;
+          const oy = (440 + sh1 + sh2) / 2 - 4;
+
+          const p0 = [ox, oy];
+          const p1 = [ox + (sbot - sb) / 2, oy - sh2];
+          const p2 = [ox + (sbot - sb) / 2 + ssl, oy - sh2 - sh1];
+          const p3 = [ox + (sbot - sb) / 2 + ssl + sb, oy - sh2 - sh1];
+          const p4 = [ox + (sbot + sb) / 2, oy - sh2];
+          const p5 = [ox + sbot, oy];
+
+          return {
+            unit,
+            area,
+            sampleExpr: `${base} × ${h1} + (${base} + ${botB}) × ${h2} ÷ 2`,
+            hintText: `連接中間兩個腰部轉折點畫一條水平線，可以把圖形分成上下兩個基本圖形；留意上方平行四邊形的對邊相等。`,
+            polygon: [p0, p1, p2, p3, p4, p5],
+            snapPoints: [p0, p1, p2, p3, p4, p5],
+            hintLines: [[p1, p4]],
+            renderExtras(baseG, dimG) {
+              baseG.appendChild(createSvgEl('line', {
+                x1: p2[0], y1: p2[1], x2: p0[0] - 4, y2: p2[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+              baseG.appendChild(createSvgEl('line', {
+                x1: p1[0], y1: p1[1], x2: p0[0] - 4, y2: p1[1],
+                stroke: '#475569', 'stroke-width': '1.3', 'stroke-dasharray': '4,3'
+              }));
+
+              // 樣式 A：頂邊與底邊完整實邊純文字
+              drawTextDim(dimG, p2, p3, `${base} ${unit}`, 13);
+              drawTextDim(dimG, p5, p0, `${botB} ${unit}`, 14);
+
+              // 樣式 B：左側兩段虛線高度用延伸界線＋雙箭頭
+              drawArrowDim(dimG, [p0[0], p1[1]], [p0[0], p2[1]], `${h1} ${unit}`, 15);
+              drawArrowDim(dimG, p0, [p0[0], p1[1]], `${h2} ${unit}`, 15);
+            }
+          };
+        }
+      }
+    ];
+
+    /**
+     * =========================================================================
+     * 4. 應用程式狀態與題目隊列管理
+     * =========================================================================
+     */
+    const state = {
+      questions: [],
+      currentIndex: 0,
+      initialTotal: 10,
+      addedQuestionsCount: 0,
+      firstTryCorrectCount: 0,
+      currentWrongAttempts: 0,
+      currentQuestionHadError: false,
+      currentQuestionSolved: false,
+      selectedMethod: 'split',
+      // 互動繪圖狀態
+      drawMode: true,
+      userLines: [],
+      isDrawing: false,
+      dragStart: null,
+      dragCurrent: null,
+      activeSnap: null,
+      showHintLines: false
+    };
+
+    // DOM 元素參照
+    const dom = {
+      progressText: document.getElementById('progressText'),
+      progressBar: document.getElementById('progressBar'),
+      penaltyBadge: document.getElementById('penaltyBadge'),
+      addedCountText: document.getElementById('addedCountText'),
+      attemptStatusBadge: document.getElementById('attemptStatusBadge'),
+      svg: document.getElementById('geometrySvg'),
+      layerBaseShape: document.getElementById('layerBaseShape'),
+      layerHintLines: document.getElementById('layerHintLines'),
+      layerDimensions: document.getElementById('layerDimensions'),
+      layerUserLines: document.getElementById('layerUserLines'),
+      layerSnapAndPreview: document.getElementById('layerSnapAndPreview'),
+      toggleDrawBtn: document.getElementById('toggleDrawBtn'),
+      undoLineBtn: document.getElementById('undoLineBtn'),
+      clearLinesBtn: document.getElementById('clearLinesBtn'),
+      showHintLineBtn: document.getElementById('showHintLineBtn'),
+      methodSplitBtn: document.getElementById('methodSplitBtn'),
+      methodFillBtn: document.getElementById('methodFillBtn'),
+      expressionInput: document.getElementById('expressionInput'),
+      answerInput: document.getElementById('answerInput'),
+      unitDisplay: document.getElementById('unitDisplay'),
+      clearExprBtn: document.getElementById('clearExprBtn'),
+      feedbackBox: document.getElementById('feedbackBox'),
+      feedbackIcon: document.getElementById('feedbackIcon'),
+      feedbackTitle: document.getElementById('feedbackTitle'),
+      feedbackMessage: document.getElementById('feedbackMessage'),
+      submitBtn: document.getElementById('submitBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      nextBtnText: document.getElementById('nextBtnText'),
+      practiceArea: document.getElementById('practiceArea'),
+      summaryScreen: document.getElementById('summaryScreen'),
+      statTotal: document.getElementById('statTotal'),
+      statFirstTry: document.getElementById('statFirstTry'),
+      statAdded: document.getElementById('statAdded'),
+      statAccuracy: document.getElementById('statAccuracy'),
+      restartBtn: document.getElementById('restartBtn')
+    };
+
+    // 生成不重複的新題目
+    function createUniqueQuestion(templateIndex = null, isExactSample = false) {
+      let tpl;
+      if (templateIndex !== null) {
+        tpl = QUESTION_TEMPLATES[templateIndex % QUESTION_TEMPLATES.length];
+      } else {
+        // 避免與最近兩題相同題型
+        const recentIds = state.questions.slice(-2).map(q => q.templateId);
+        const candidates = QUESTION_TEMPLATES.filter(t => !recentIds.includes(t.id));
+        tpl = pickRandom(candidates.length > 0 ? candidates : QUESTION_TEMPLATES);
+      }
+
+      // 嘗試生成與既有題目數值不完全重複的題目
+      for (let attempt = 0; attempt < 15; attempt++) {
+        const q = tpl.generate(isExactSample && attempt === 0);
+        q.templateId = tpl.id;
+        const dup = state.questions.some(
+          existing => existing.templateId === q.templateId && existing.area === q.area
+        );
+        if (!dup || isExactSample) return q;
+      }
+      const fallback = tpl.generate(false);
+      fallback.templateId = tpl.id;
+      return fallback;
+    }
+
+    // 初始化 10 題練習
+    function initPractice() {
+      state.questions = [];
+      state.currentIndex = 0;
+      state.initialTotal = 10;
+      state.addedQuestionsCount = 0;
+      state.firstTryCorrectCount = 0;
+
+      // 第 1 題固定為附圖經典題（正方形 9×9 + 平行四邊形 12×9），建立親切感
+      state.questions.push(createUniqueQuestion(0, true));
+
+      // 其餘 9 題洗牌選取多樣化組合
+      const shuffledIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 9);
+
+      for (const idx of shuffledIndices) {
+        state.questions.push(createUniqueQuestion(idx, false));
+      }
+
+      dom.summaryScreen.classList.add('hidden');
+      dom.summaryScreen.classList.remove('flex');
+      dom.practiceArea.classList.remove('hidden');
+
+      loadQuestion(0);
+    }
+
+    // 載入指定題目
+    function loadQuestion(index) {
+      state.currentIndex = index;
+      state.currentWrongAttempts = 0;
+      state.currentQuestionHadError = false;
+      state.currentQuestionSolved = false;
+      state.userLines = [];
+      state.isDrawing = false;
+      state.dragStart = null;
+      state.dragCurrent = null;
+      state.activeSnap = null;
+      state.showHintLines = false;
+
+      const q = state.questions[index];
+
+      // 更新頂部進度
+      updateProgressUI();
+
+      // 更新題目資訊
+      dom.unitDisplay.textContent = `${q.unit}²`;
+      dom.attemptStatusBadge.textContent = '首次作答';
+      dom.attemptStatusBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-sky-100 text-sky-700';
+
+      // 重設輸入與按鈕狀態
+      dom.expressionInput.value = '';
+      dom.answerInput.value = '';
+      dom.expressionInput.disabled = false;
+      dom.answerInput.disabled = false;
+      dom.feedbackBox.classList.add('hidden');
+      dom.showHintLineBtn.classList.add('hidden');
+      dom.showHintLineBtn.classList.remove('flex');
+
+      dom.submitBtn.classList.remove('hidden');
+      dom.nextBtn.classList.add('hidden');
+      dom.nextBtn.classList.remove('flex');
+
+      setMethod('split');
+      renderGeometry(q);
+      updateLineToolButtons();
+    }
+
+    function updateProgressUI() {
+      const total = state.questions.length;
+      const currentNum = state.currentIndex + 1;
+      dom.progressText.textContent = `第 ${currentNum} / ${total} 題`;
+      const pct = Math.min(100, Math.round(((state.currentIndex + (state.currentQuestionSolved ? 1 : 0)) / total) * 100));
+      dom.progressBar.style.width = `${Math.max(8, pct)}%`;
+
+      if (state.addedQuestionsCount > 0) {
+        dom.penaltyBadge.classList.remove('hidden');
+        dom.penaltyBadge.classList.add('flex');
+        dom.addedCountText.textContent = `+${state.addedQuestionsCount} 題`;
+      } else {
+        dom.penaltyBadge.classList.add('hidden');
+        dom.penaltyBadge.classList.remove('flex');
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 5. 渲染 SVG 幾何圖形與學生輔助線
+     * =========================================================================
+     */
+    function renderGeometry(q) {
+      dom.layerBaseShape.innerHTML = '';
+      dom.layerHintLines.innerHTML = '';
+      dom.layerDimensions.innerHTML = '';
+
+      // 繪製多邊形主體（香港課本經典淺藍色填充 + 深色實線邊框）
+      const pointsStr = q.polygon.map(p => `${p[0]},${p[1]}`).join(' ');
+      const polyEl = createSvgEl('polygon', {
+        points: pointsStr,
+        fill: '#89cff0',
+        'fill-opacity': '0.85',
+        stroke: '#1e293b',
+        'stroke-width': '2.2',
+        'stroke-linejoin': 'round'
+      });
+      dom.layerBaseShape.appendChild(polyEl);
+
+      // 繪製額外虛線、直角記號與尺寸標註
+      q.renderExtras(dom.layerBaseShape, dom.layerDimensions);
+
+      // 繪製參考提示線（若學生開啟）
+      if (state.showHintLines && q.hintLines) {
+        q.hintLines.forEach(([pA, pB]) => {
+          dom.layerHintLines.appendChild(createSvgEl('line', {
+            x1: pA[0], y1: pA[1], x2: pB[0], y2: pB[1],
+            stroke: '#f59e0b',
+            'stroke-width': '3',
+            'stroke-dasharray': '7,5',
+            'stroke-linecap': 'round'
+          }));
+        });
+      }
+
+      renderUserLines();
+    }
+
+    function renderUserLines() {
+      dom.layerUserLines.innerHTML = '';
+      state.userLines.forEach(line => {
+        dom.layerUserLines.appendChild(createSvgEl('line', {
+          x1: line.x1,
+          y1: line.y1,
+          x2: line.x2,
+          y2: line.y2,
+          stroke: '#e11d48',
+          'stroke-width': '2.6',
+          'stroke-dasharray': '6,4',
+          'stroke-linecap': 'round'
+        }));
+        // 端點小圓點
+        [
+          [line.x1, line.y1],
+          [line.x2, line.y2]
+        ].forEach(([cx, cy]) => {
+          dom.layerUserLines.appendChild(createSvgEl('circle', {
+            cx, cy, r: '3.5',
+            fill: '#e11d48'
+          }));
+        });
+      });
+    }
+
+    function updateLineToolButtons() {
+      const hasLines = state.userLines.length > 0;
+      dom.undoLineBtn.disabled = !hasLines;
+      dom.clearLinesBtn.disabled = !hasLines;
+    }
+
+    /**
+     * =========================================================================
+     * 6. 互動輔助線繪圖（支援滑鼠、觸控與頂點自動吸附 Snap-to-Vertex）
+     * =========================================================================
+     */
+    function getSvgCoords(evt) {
+      const rect = dom.svg.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      const x = ((clientX - rect.left) / rect.width) * 600;
+      const y = ((clientY - rect.top) / rect.height) * 440;
+      return { x, y };
+    }
+
+    function findSnapPoint(pt) {
+      const q = state.questions[state.currentIndex];
+      if (!q || !q.snapPoints) return null;
+      const SNAP_RADIUS = 18;
+      let nearest = null;
+      let minDist = SNAP_RADIUS;
+      for (const [sx, sy] of q.snapPoints) {
+        const d = Math.hypot(pt.x - sx, pt.y - sy);
+        if (d < minDist) {
+          minDist = d;
+          nearest = { x: sx, y: sy };
+        }
+      }
+      return nearest;
+    }
+
+    function renderPreviewAndSnap() {
+      dom.layerSnapAndPreview.innerHTML = '';
+
+      // 顯示可吸附關鍵點微光提示
+      const q = state.questions[state.currentIndex];
+      if (state.drawMode && q && q.snapPoints) {
+        q.snapPoints.forEach(([sx, sy]) => {
+          dom.layerSnapAndPreview.appendChild(createSvgEl('circle', {
+            cx: sx, cy: sy, r: '4',
+            fill: '#0284c7',
+            'fill-opacity': '0.35'
+          }));
+        });
+      }
+
+      if (state.activeSnap) {
+        dom.layerSnapAndPreview.appendChild(createSvgEl('circle', {
+          cx: state.activeSnap.x,
+          cy: state.activeSnap.y,
+          r: '8',
+          fill: 'none',
+          stroke: '#e11d48',
+          'stroke-width': '2'
+        }));
+      }
+
+      if (state.isDrawing && state.dragStart && state.dragCurrent) {
+        dom.layerSnapAndPreview.appendChild(createSvgEl('line', {
+          x1: state.dragStart.x,
+          y1: state.dragStart.y,
+          x2: state.dragCurrent.x,
+          y2: state.dragCurrent.y,
+          stroke: '#e11d48',
+          'stroke-width': '2.5',
+          'stroke-dasharray': '5,4'
+        }));
+      }
+    }
+
+    function handlePointerDown(evt) {
+      if (!state.drawMode) return;
+      evt.preventDefault();
+      const rawPt = getSvgCoords(evt);
+      const snapped = findSnapPoint(rawPt) || rawPt;
+      state.isDrawing = true;
+      state.dragStart = snapped;
+      state.dragCurrent = snapped;
+      state.activeSnap = findSnapPoint(rawPt);
+      renderPreviewAndSnap();
+    }
+
+    function handlePointerMove(evt) {
+      if (!state.drawMode) return;
+      const rawPt = getSvgCoords(evt);
+      const snapped = findSnapPoint(rawPt);
+      state.activeSnap = snapped;
+      if (state.isDrawing) {
+        evt.preventDefault();
+        state.dragCurrent = snapped || rawPt;
+      }
+      renderPreviewAndSnap();
+    }
+
+    function handlePointerUp() {
+      if (!state.isDrawing) return;
+      if (state.dragStart && state.dragCurrent) {
+        const dist = Math.hypot(
+          state.dragCurrent.x - state.dragStart.x,
+          state.dragCurrent.y - state.dragStart.y
+        );
+        if (dist > 10) {
+          state.userLines.push({
+            x1: state.dragStart.x,
+            y1: state.dragStart.y,
+            x2: state.dragCurrent.x,
+            y2: state.dragCurrent.y
+          });
+          renderUserLines();
+          updateLineToolButtons();
+        }
+      }
+      state.isDrawing = false;
+      state.dragStart = null;
+      state.dragCurrent = null;
+      renderPreviewAndSnap();
+    }
+
+    dom.svg.addEventListener('mousedown', handlePointerDown);
+    dom.svg.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
+
+    dom.svg.addEventListener('touchstart', handlePointerDown, { passive: false });
+    dom.svg.addEventListener('touchmove', handlePointerMove, { passive: false });
+    window.addEventListener('touchend', handlePointerUp);
+
+    dom.toggleDrawBtn.addEventListener('click', () => {
+      state.drawMode = !state.drawMode;
+      if (state.drawMode) {
+        dom.toggleDrawBtn.classList.replace('bg-white', 'bg-sky-600');
+        dom.toggleDrawBtn.classList.replace('text-slate-700', 'text-white');
+        dom.svg.classList.add('cursor-crosshair');
+      } else {
+        dom.toggleDrawBtn.classList.replace('bg-sky-600', 'bg-white');
+        dom.toggleDrawBtn.classList.replace('text-white', 'text-slate-700');
+        dom.svg.classList.remove('cursor-crosshair');
+      }
+      renderPreviewAndSnap();
+    });
+
+    dom.undoLineBtn.addEventListener('click', () => {
+      state.userLines.pop();
+      renderUserLines();
+      updateLineToolButtons();
+    });
+
+    dom.clearLinesBtn.addEventListener('click', () => {
+      state.userLines = [];
+      renderUserLines();
+      updateLineToolButtons();
+    });
+
+    dom.showHintLineBtn.addEventListener('click', () => {
+      state.showHintLines = true;
+      renderGeometry(state.questions[state.currentIndex]);
+    });
+
+    /**
+     * =========================================================================
+     * 7. 右側列式計算交互、驗證與錯題懲罰機制
+     * =========================================================================
+     */
+    function setMethod(method) {
+      state.selectedMethod = method;
+      if (method === 'split') {
+        dom.methodSplitBtn.className = 'method-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border-2 border-sky-500 bg-sky-50 text-sky-800 font-bold text-sm transition';
+        dom.methodFillBtn.className = 'method-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border-2 border-slate-200 bg-white text-slate-600 hover:border-slate-300 font-bold text-sm transition';
+      } else {
+        dom.methodFillBtn.className = 'method-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border-2 border-indigo-500 bg-indigo-50 text-indigo-800 font-bold text-sm transition';
+        dom.methodSplitBtn.className = 'method-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border-2 border-slate-200 bg-white text-slate-600 hover:border-slate-300 font-bold text-sm transition';
+      }
+    }
+
+    dom.methodSplitBtn.addEventListener('click', () => setMethod('split'));
+    dom.methodFillBtn.addEventListener('click', () => setMethod('fill'));
+
+    // 快捷符號輸入
+    document.querySelectorAll('.sym-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (dom.expressionInput.disabled) return;
+        const sym = btn.getAttribute('data-symbol');
+        const input = dom.expressionInput;
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? input.value.length;
+        input.value = input.value.slice(0, start) + sym + input.value.slice(end);
+        input.focus();
+        const newPos = start + sym.length;
+        input.setSelectionRange(newPos, newPos);
+      });
+    });
+
+    dom.clearExprBtn.addEventListener('click', () => {
+      if (dom.expressionInput.disabled) return;
+      dom.expressionInput.value = '';
+      dom.expressionInput.focus();
+    });
+
+    function showFeedback(type, title, message) {
+      dom.feedbackBox.classList.remove('hidden', 'animate-shake');
+      void dom.feedbackBox.offsetWidth; // 觸發重繪以重播動畫
+
+      if (type === 'success') {
+        dom.feedbackBox.className = 'rounded-2xl p-4 border-2 border-emerald-300 bg-emerald-50 text-emerald-900 text-sm leading-relaxed animate-pop';
+        dom.feedbackIcon.textContent = '🎉';
+      } else if (type === 'error') {
+        dom.feedbackBox.className = 'rounded-2xl p-4 border-2 border-rose-300 bg-rose-50 text-rose-900 text-sm leading-relaxed animate-shake';
+        dom.feedbackIcon.textContent = '❌';
+      } else {
+        dom.feedbackBox.className = 'rounded-2xl p-4 border-2 border-amber-300 bg-amber-50 text-amber-900 text-sm leading-relaxed animate-pop';
+        dom.feedbackIcon.textContent = '💡';
+      }
+
+      dom.feedbackTitle.textContent = title;
+      dom.feedbackMessage.textContent = message;
+    }
+
+    // 記錄答錯並執行懲罰規則（本題需改正 + 總題數新增 1 題）
+    function registerWrongAttempt() {
+      state.currentWrongAttempts++;
+
+      if (!state.currentQuestionHadError) {
+        state.currentQuestionHadError = true;
+        state.addedQuestionsCount++;
+        // 新增一題新的多邊形面積題目到練習隊列尾端
+        const newQuestion = createUniqueQuestion(null, false);
+        state.questions.push(newQuestion);
+        updateProgressUI();
+      }
+
+      dom.attemptStatusBadge.textContent = `需完成改正（第 ${state.currentWrongAttempts} 次錯誤）`;
+      dom.attemptStatusBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700';
+
+      // 答錯 2 次或以上時，顯示「顯示參考虛線」按鈕幫助學生理解
+      if (state.currentWrongAttempts >= 2) {
+        dom.showHintLineBtn.classList.remove('hidden');
+        dom.showHintLineBtn.classList.add('flex');
+      }
+    }
+
+    // 核對橫式與答案
+    function handleVerify() {
+      if (state.currentQuestionSolved) return;
+
+      const q = state.questions[state.currentIndex];
+      const rawExpr = dom.expressionInput.value.trim();
+      const rawAns = dom.answerInput.value.trim();
+
+      // 1. 先驗證橫式語法與計算值（橫式必須正確才能計答案！）
+      const evalResult = evaluateMathExpression(rawExpr);
+      if (!evalResult.valid) {
+        registerWrongAttempt();
+        showFeedback(
+          'error',
+          '橫式未完成或格式有誤（必須先寫對橫式）',
+          `${evalResult.error}（本題答錯已新增 1 題練習，請改正橫式後再提交！）`
+        );
+        dom.expressionInput.focus();
+        return;
+      }
+
+      // 2. 檢查橫式算出的結果是否等於該多邊形的正確面積
+      if (Math.abs(evalResult.value - q.area) > 0.01) {
+        registerWrongAttempt();
+        showFeedback(
+          'error',
+          `橫式不正確！你的橫式算出來是 ${evalResult.value}，與圖形面積不符。`,
+          `請先改正橫式，才能核對答案！${q.hintText}（已為你新增 1 題練習）`
+        );
+        dom.expressionInput.focus();
+        return;
+      }
+
+      // 3. 橫式正確後，檢查答案欄是否有填寫及是否正確
+      if (rawAns === '') {
+        showFeedback(
+          'warning',
+          '橫式正確！請繼續填寫最後答案',
+          `你的橫式列式正確！請在下方「面積 = 」空格輸入計算結果，再按核對。`
+        );
+        dom.answerInput.focus();
+        return;
+      }
+
+      const studentAns = parseFloat(rawAns);
+      if (Number.isNaN(studentAns) || Math.abs(studentAns - q.area) > 0.01) {
+        registerWrongAttempt();
+        showFeedback(
+          'error',
+          '橫式已正確，但最後計算的答案不正確！',
+          `你的橫式完全正確，請重新小心計算這條橫式的得數並改正答案！（本題答錯已新增 1 題練習）`
+        );
+        dom.answerInput.focus();
+        return;
+      }
+
+      // 4. 橫式與答案皆完全正確！
+      state.currentQuestionSolved = true;
+      if (!state.currentQuestionHadError) {
+        state.firstTryCorrectCount++;
+      }
+
+      dom.expressionInput.disabled = true;
+      dom.answerInput.disabled = true;
+      dom.attemptStatusBadge.textContent = state.currentQuestionHadError ? '✅ 已完成改正' : '🌟 一次答對';
+      dom.attemptStatusBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700';
+
+      updateProgressUI();
+
+      const extraNote = state.currentQuestionHadError
+        ? `你已成功改正本題！因剛才有答錯紀錄，練習總題數已調整為 ${state.questions.length} 題。`
+        : `太棒了！一次就列出正確橫式並算出面積 ${q.area} ${q.unit}²！`;
+
+      showFeedback(
+        'success',
+        `答對了！正確面積是 ${q.area} ${q.unit}²`,
+        `${extraNote}（參考橫式：${q.sampleExpr} = ${q.area}）`
+      );
+
+      dom.submitBtn.classList.add('hidden');
+      dom.nextBtn.classList.remove('hidden');
+      dom.nextBtn.classList.add('flex');
+
+      const isLast = state.currentIndex + 1 >= state.questions.length;
+      dom.nextBtnText.textContent = isLast ? '查看成績總結' : '進入下一題';
+    }
+
+    dom.submitBtn.addEventListener('click', handleVerify);
+
+    // 支援按 Enter 鍵快速提交
+    [dom.expressionInput, dom.answerInput].forEach(inp => {
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (!state.currentQuestionSolved) handleVerify();
+          else dom.nextBtn.click();
+        }
+      });
+    });
+
+    // 進入下一題或顯示成績總結
+    dom.nextBtn.addEventListener('click', () => {
+      if (!state.currentQuestionSolved) return;
+      if (state.currentIndex + 1 < state.questions.length) {
+        loadQuestion(state.currentIndex + 1);
+      } else {
+        showSummary();
+      }
+    });
+
+    function showSummary() {
+      dom.practiceArea.classList.add('hidden');
+      dom.summaryScreen.classList.remove('hidden');
+      dom.summaryScreen.classList.add('flex');
+
+      const total = state.questions.length;
+      const firstTry = state.firstTryCorrectCount;
+      const added = state.addedQuestionsCount;
+      const accuracy = Math.round((firstTry / total) * 100);
+
+      dom.statTotal.textContent = total;
+      dom.statFirstTry.textContent = firstTry;
+      dom.statAdded.textContent = `+${added}`;
+      dom.statAccuracy.textContent = `${accuracy}%`;
+    }
+
+    dom.restartBtn.addEventListener('click', initPractice);
+
+    // 啟動應用程式
+    window.addEventListener('DOMContentLoaded', initPractice);
+  </script>
+</body>
+</html>
